@@ -3,341 +3,311 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบสุ่มรายชื่อนักเรียน</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <title>สุ่มรายชื่อนักเรียน</title>
     <style>
-        body { font-family: -apple-system, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; background: #f0f2f5; }
-        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #1a73e8; text-align: center; margin-bottom: 20px; }
-        select, input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin: 5px; }
-        button { background: #1a73e8; color: white; border: none; padding: 8px 16px; border-radius: 4px; margin: 5px; cursor: pointer; }
-        button:hover { background: #1557b0; }
-        .delete-btn { background: #dc3545; }
-        .delete-btn:hover { background: #c82333; }
-        #result { margin: 20px 0; padding: 15px; background: #e8f0fe; border-radius: 8px; }
-        .student-list { list-style: none; padding: 0; }
-        .student-item { display: flex; justify-content: space-between; padding: 8px; margin: 5px 0; background: #f8f9fa; border-radius: 4px; }
-        .selected { background: #e8f0fe; font-weight: bold; }
-        .group { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 4px; }
-        .group-title { font-weight: bold; color: #1a73e8; margin-bottom: 5px; }
-        .import-section { 
-            padding: 15px;
-            background: #f8f9fa;
+        body {
+            font-family: -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+
+        /* หน้าหลัก */
+        h1 {
+            color: #1a73e8;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .container {
+            background: white;
+            padding: 20px;
             border-radius: 8px;
-            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .file-input {
-            display: none;
+
+        /* ส่วนควบคุม */
+        .control-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .file-label {
-            background: #4CAF50;
+
+        /* ฟอร์ม */
+        select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 120px;
+        }
+        input[type="text"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+        input[type="number"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 80px;
+        }
+
+        /* ปุ่มกด */
+        button {
+            background: #1a73e8;
             color: white;
+            border: none;
             padding: 8px 16px;
             border-radius: 4px;
             cursor: pointer;
-            display: inline-block;
         }
-        .file-label:hover {
-            background: #45a049;
+        button.blue { background: #1a73e8; }
+        button.blue:hover { background: #1557b0; }
+        button.orange { background: #ffa726; }
+        button.orange:hover { background: #fb8c00; }
+        button.red { background: #dc3545; }
+        button.red:hover { background: #c82333; }
+
+        /* รายชื่อ */
+        .student-list {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+        }
+        .student-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .selected {
+            background: #e8f0fe;
+            font-weight: bold;
+        }
+
+        /* ผลลัพธ์ */
+        #result {
+            margin: 15px 0;
+            padding: 15px;
+            background: #e8f0fe;
+            border-radius: 8px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>ระบบสุ่มรายชื่อนักเรียน</h1>
-
-        <div class="import-section">
-            <h3>นำเข้าข้อมูลนักเรียน</h3>
-            <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls">
-            <label for="fileInput" class="file-label">เลือกไฟล์ Excel</label>
-            <button onclick="downloadTemplate()">ดาวน์โหลดเทมเพลต</button>
-            <button onclick="loadSampleData()" style="background: #ffa726;">เรียกข้อมูลตัวอย่าง</button>
-            <p>* รูปแบบไฟล์: .xlsx หรือ .xls</p>
-        </div>
+        <h1>สุ่มรายชื่อนักเรียน</h1>
         
-        <div>
-            <select id="grade-select" onchange="loadStudents()">
-                <option value="">เลือกระดับชั้น</option>
+        <!-- เลือกชั้น/ห้อง -->
+        <div class="control-box">
+            <select id="grade">
+                <option value="">เลือกชั้น</option>
                 <option value="ป.1">ป.1</option>
                 <option value="ป.2">ป.2</option>
                 <option value="ป.3">ป.3</option>
             </select>
 
-            <select id="room-select" onchange="loadStudents()">
+            <select id="room">
                 <option value="">เลือกห้อง</option>
                 <option value="1">ห้อง 1</option>
                 <option value="2">ห้อง 2</option>
                 <option value="3">ห้อง 3</option>
             </select>
+
+            <button class="orange" onclick="loadSample()">เรียกข้อมูลตัวอย่าง</button>
         </div>
 
-        <div>
-            <input type="text" id="student-input" placeholder="ชื่อ-นามสกุล" onkeypress="if(event.key === 'Enter') addStudent()">
-            <button onclick="addStudent()">เพิ่มรายชื่อ</button>
+        <!-- เพิ่มรายชื่อ -->
+        <div class="control-box">
+            <input type="text" id="name" placeholder="ชื่อ-นามสกุล">
+            <button class="blue" onclick="addStudent()">เพิ่มรายชื่อ</button>
         </div>
 
-        <div style="margin: 10px 0;">
-            <label>สุ่มเลือก: </label>
-            <input type="number" id="selectCount" min="1" max="50" value="1" style="width: 60px">
-            <button onclick="randomSelect(document.getElementById('selectCount').value)">สุ่มเลือก</button>
+        <!-- สุ่มเลือก -->
+        <div class="control-box">
+            <input type="number" id="selectNum" value="1" min="1">
+            <button class="blue" onclick="randomSelect()">สุ่มเลือก</button>
         </div>
 
-        <div style="margin: 10px 0;">
-            <label>แบ่งกลุ่ม: </label>
-            <input type="number" id="groupCount" min="2" max="10" value="2" style="width: 60px">
-            <button onclick="randomGroups(document.getElementById('groupCount').value)">แบ่งกลุ่ม</button>
-            <button onclick="clearSelection()">ล้างการเลือก</button>
+        <!-- แบ่งกลุ่ม -->
+        <div class="control-box">
+            <input type="number" id="groupNum" value="2" min="2">
+            <button class="blue" onclick="randomGroup()">แบ่งกลุ่ม</button>
+            <button class="red" onclick="clearAll()">ล้างข้อมูล</button>
         </div>
 
+        <!-- แสดงผล -->
         <div id="result"></div>
-        <ul id="student-list" class="student-list"></ul>
+        <div id="list"></div>
     </div>
 
     <script>
-        // ข้อมูลตัวอย่าง
-        const sampleData = {
-            'ป.1': {
-                '1': ['ดวงกมล ใจดี', 'ธนกร รักเรียน', 'นภัสสร สมบูรณ์', 'ปัณณธร มั่นคง', 'พิมพ์มาดา สดใส'],
-                '2': ['ภูมิพัฒน์ ตั้งใจ', 'วรินทร กล้าหาญ', 'ศุภวิชญ์ สุขสันต์', 'สิริกร พรหมมา', 'อชิรญา ยิ้มสวย'],
-                '3': ['กานต์ธิดา แก้วใส', 'ขวัญชัย สว่างใจ', 'จิรภัทร งามวงศ์', 'ฉัตรชัย ใจเย็น', 'ชนิกานต์ รักษ์ดี']
-            },
-            'ป.2': {
-                '1': ['ณัฐนันท์ บุญเกิด', 'ดนุพล โชติวิทย์', 'ธัญญา จันทร์เพ็ญ', 'นันทิชา สุนทร', 'บุญญาภา แสงทอง'],
-                '2': ['ปวีณา วงศ์สุวรรณ', 'พลอยชมพู รุ่งเรือง', 'ภาคิน ดวงแก้ว', 'มินตรา มีสุข', 'รมิดา พงษ์พันธ์'],
-                '3': ['วชิรวิทย์ สมใจ', 'ศรัณย์ภัทร ใจงาม', 'สุภัสสรา รักดี', 'อธิชา สุขศรี', 'อนันตญา ศรีวิไล']
-            },
-            'ป.3': {
-                '1': ['กฤติน เมตตา', 'ขวัญข้าว สายทอง', 'จุฑามาศ วงศ์ไทย', 'ฐิติรัตน์ ภักดี', 'ณิชารีย์ จิตรงาม'],
-                '2': ['ธนภัทร ชื่นชม', 'นวินดา สุขใจ', 'ปารณีย์ งามเลิศ', 'พิชญา ศรีสุข', 'ภูริ รักเรียน'],
-                '3': ['มนัสนันท์ ใจดี', 'รวิศ สว่างวงศ์', 'ลลิตา ศรีทอง', 'วรรณวิสา สุนทร', 'ศุภณัฐ มั่นคง']
-            }
-        };
+        // ข้อมูลนักเรียน
+        let students = {};
+        let currentList = [];
+        let selected = [];
 
-        // ฟังก์ชันโหลดข้อมูลตัวอย่าง
-        function loadSampleData() {
-            studentData = JSON.parse(JSON.stringify(sampleData)); // Deep copy
-            alert('โหลดข้อมูลตัวอย่างสำเร็จ');
-            loadStudents();
-        }
-
-        let currentStudents = [];
-        let selectedStudents = [];
-
-        // ตั้งค่า Event Listener สำหรับการนำเข้าไฟล์
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const data = new Uint8Array(e.target.result);
-                    processExcel(data);
-                };
-                reader.readAsArrayBuffer(file);
-            }
-        });
-
-        // ประมวลผลไฟล์ Excel
-        function processExcel(data) {
-            try {
-                const workbook = XLSX.read(data, { type: 'array' });
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-
-                // รีเซ็ตข้อมูลนักเรียน
-                studentData = {
-                    'ป.1': { '1': [], '2': [], '3': [] },
-                    'ป.2': { '1': [], '2': [], '3': [] },
-                    'ป.3': { '1': [], '2': [], '3': [] }
-                };
-
-                // จัดกลุ่มข้อมูลตามชั้นและห้อง
-                jsonData.forEach(row => {
-                    const grade = row['ระดับชั้น'];
-                    const room = row['ห้อง'].toString();
-                    const name = row['ชื่อ-นามสกุล'];
-
-                    if (grade && room && name && studentData[grade]?.[room]) {
-                        studentData[grade][room].push(name);
-                    }
-                });
-
-                alert('นำเข้าข้อมูลสำเร็จ');
-                loadStudents(); // โหลดข้อมูลใหม่
-            } catch (error) {
-                console.error('Error processing Excel file:', error);
-                alert('เกิดข้อผิดพลาดในการนำเข้าข้อมูล');
-            }
-        }
-
-        // สร้างและดาวน์โหลดเทมเพลต Excel
-        function downloadTemplate() {
-            const template = [
-                {
-                    'ระดับชั้น': 'ป.1',
-                    'ห้อง': '1',
-                    'ชื่อ-นามสกุล': 'ตัวอย่าง สมใจ'
+        // โหลดข้อมูลตัวอย่าง
+        function loadSample() {
+            students = {
+                'ป.1': {
+                    '1': ['ดวงกมล ใจดี', 'ธนกร รักเรียน', 'นภัสสร สมบูรณ์', 'ปัณณธร มั่นคง', 'พิมพ์มาดา สดใส'],
+                    '2': ['ภูมิพัฒน์ ตั้งใจ', 'วรินทร กล้าหาญ', 'ศุภวิชญ์ สุขสันต์', 'สิริกร พรหมมา', 'อชิรญา ยิ้มสวย'],
+                    '3': ['กานต์ธิดา แก้วใส', 'ขวัญชัย สว่างใจ', 'จิรภัทร งามวงศ์', 'ฉัตรชัย ใจเย็น', 'ชนิกานต์ รักษ์ดี']
+                },
+                'ป.2': {
+                    '1': ['ณัฐนันท์ บุญเกิด', 'ดนุพล โชติวิทย์', 'ธัญญา จันทร์เพ็ญ', 'นันทิชา สุนทร', 'บุญญาภา แสงทอง'],
+                    '2': ['ปวีณา วงศ์สุวรรณ', 'พลอยชมพู รุ่งเรือง', 'ภาคิน ดวงแก้ว', 'มินตรา มีสุข', 'รมิดา พงษ์พันธ์'],
+                    '3': ['วชิรวิทย์ สมใจ', 'ศรัณย์ภัทร ใจงาม', 'สุภัสสรา รักดี', 'อธิชา สุขศรี', 'อนันตญา ศรีวิไล']
+                },
+                'ป.3': {
+                    '1': ['กฤติน เมตตา', 'ขวัญข้าว สายทอง', 'จุฑามาศ วงศ์ไทย', 'ฐิติรัตน์ ภักดี', 'ณิชารีย์ จิตรงาม'],
+                    '2': ['ธนภัทร ชื่นชม', 'นวินดา สุขใจ', 'ปารณีย์ งามเลิศ', 'พิชญา ศรีสุข', 'ภูริ รักเรียน'],
+                    '3': ['มนัสนันท์ ใจดี', 'รวิศ สว่างวงศ์', 'ลลิตา ศรีทอง', 'วรรณวิสา สุนทร', 'ศุภณัฐ มั่นคง']
                 }
-            ];
-
-            const ws = XLSX.utils.json_to_sheet(template);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "รายชื่อนักเรียน");
-
-            XLSX.writeFile(wb, "template_students.xlsx");
+            };
+            updateList();
+            alert('โหลดข้อมูลตัวอย่างสำเร็จ');
         }
 
-        function loadStudents() {
-            const grade = document.getElementById('grade-select').value;
-            const room = document.getElementById('room-select').value;
+        // อัพเดทรายการ
+        function updateList() {
+            const grade = document.getElementById('grade').value;
+            const room = document.getElementById('room').value;
             
-            if (grade && room && studentData[grade]?.[room]) {
-                currentStudents = [...studentData[grade][room]];
-            } else {
-                currentStudents = [];
-            }
-            
-            selectedStudents = [];
-            updateDisplay();
+            currentList = students[grade]?.[room] || [];
+            selected = [];
+            showList();
         }
 
+        // เพิ่มนักเรียน
         function addStudent() {
-            const input = document.getElementById('student-input');
-            const name = input.value.trim();
-            const grade = document.getElementById('grade-select').value;
-            const room = document.getElementById('room-select').value;
+            const grade = document.getElementById('grade').value;
+            const room = document.getElementById('room').value;
+            const name = document.getElementById('name').value.trim();
             
             if (!grade || !room) {
-                alert('กรุณาเลือกระดับชั้นและห้องเรียนก่อน');
+                alert('กรุณาเลือกชั้นและห้องก่อน');
                 return;
             }
+            if (!name) return;
+
+            if (!students[grade]) students[grade] = {};
+            if (!students[grade][room]) students[grade][room] = [];
             
-            if (name) {
-                currentStudents.push(name);
-                studentData[grade][room] = [...currentStudents];
-                input.value = '';
-                updateDisplay();
-            }
+            students[grade][room].push(name);
+            document.getElementById('name').value = '';
+            updateList();
         }
 
-        function deleteStudent(index) {
-            const grade = document.getElementById('grade-select').value;
-            const room = document.getElementById('room-select').value;
-            
-            currentStudents.splice(index, 1);
-            studentData[grade][room] = [...currentStudents];
-            selectedStudents = selectedStudents.filter(student => currentStudents.includes(student));
-            updateDisplay();
+        // สุ่มเลือก
+        function randomSelect() {
+            const num = parseInt(document.getElementById('selectNum').value);
+            if (currentList.length === 0) {
+                alert('ไม่มีรายชื่อนักเรียน');
+                return;
+            }
+            if (num < 1 || num > currentList.length) {
+                alert('จำนวนไม่ถูกต้อง');
+                return;
+            }
+
+            let temp = [...currentList];
+            selected = [];
+            for (let i = 0; i < num; i++) {
+                const index = Math.floor(Math.random() * temp.length);
+                selected.push(temp[index]);
+                temp.splice(index, 1);
+            }
+
+            showList();
+            document.getElementById('result').innerHTML = `
+                <div style="font-weight: bold">นักเรียนที่ถูกเลือก:</div>
+                <div>${selected.join(', ')}</div>
+            `;
         }
 
-        function randomSelect(count) {
-            count = parseInt(count);
-            if (!count || count < 1) {
-                alert('กรุณาระบุจำนวนคนที่ต้องการสุ่ม');
+        // แบ่งกลุ่ม
+        function randomGroup() {
+            const num = parseInt(document.getElementById('groupNum').value);
+            if (currentList.length === 0) {
+                alert('ไม่มีรายชื่อนักเรียน');
+                return;
+            }
+            if (num < 2 || num > currentList.length) {
+                alert('จำนวนกลุ่มไม่ถูกต้อง');
                 return;
             }
 
-            if (currentStudents.length === 0) {
-                alert('กรุณาเลือกห้องเรียนที่มีรายชื่อนักเรียน');
-                return;
-            }
+            let shuffled = [...currentList].sort(() => Math.random() - 0.5);
+            selected = shuffled;
 
-            if (count > currentStudents.length) {
-                alert(`มีนักเรียนไม่พอสำหรับการสุ่ม ${count} คน (มีนักเรียนทั้งหมด ${currentStudents.length} คน)`);
-                return;
-            }
-
-            let tempStudents = [...currentStudents];
-            selectedStudents = [];
-
-            for (let i = 0; i < count; i++) {
-                const index = Math.floor(Math.random() * tempStudents.length);
-                selectedStudents.push(tempStudents[index]);
-                tempStudents.splice(index, 1);
-            }
-
-            updateDisplay();
-        }
-
-        function randomGroups(numGroups) {
-            numGroups = parseInt(numGroups);
-            if (!numGroups || numGroups < 2) {
-                alert('กรุณาระบุจำนวนกลุ่มที่ต้องการ (ต้องมากกว่า 1 กลุ่ม)');
-                return;
-            }
-
-            if (currentStudents.length === 0) {
-                alert('กรุณาเลือกห้องเรียนที่มีรายชื่อนักเรียน');
-                return;
-            }
-
-            if (numGroups > currentStudents.length) {
-                alert(`จำนวนกลุ่ม (${numGroups}) ต้องไม่มากกว่าจำนวนนักเรียน (${currentStudents.length} คน)`);
-                return;
-            }
-
-            let shuffled = [...currentStudents].sort(() => Math.random() - 0.5);
-            selectedStudents = shuffled;
-
-            const baseSize = Math.floor(shuffled.length / numGroups);
-            const extra = shuffled.length % numGroups;
+            const baseSize = Math.floor(shuffled.length / num);
+            const extra = shuffled.length % num;
 
             let groups = [];
-            let currentIndex = 0;
-
-            for (let i = 0; i < numGroups; i++) {
-                const groupSize = baseSize + (i < extra ? 1 : 0);
-                groups.push(shuffled.slice(currentIndex, currentIndex + groupSize));
-                currentIndex += groupSize;
+            let index = 0;
+            for (let i = 0; i < num; i++) {
+                const size = baseSize + (i < extra ? 1 : 0);
+                groups.push(shuffled.slice(index, index + size));
+                index += size;
             }
 
-            let resultHtml = `<div style="font-weight: bold">แบ่งเป็น ${numGroups} กลุ่ม:</div>`;
-            groups.forEach((group, index) => {
-                resultHtml += `
-                    <div class="group">
-                        <div class="group-title">กลุ่มที่ ${index + 1} (${group.length} คน)</div>
+            let html = `<div style="font-weight: bold">แบ่งเป็น ${num} กลุ่ม:</div>`;
+            groups.forEach((group, i) => {
+                html += `
+                    <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                        <div style="font-weight: bold; color: #1a73e8;">กลุ่มที่ ${i + 1} (${group.length} คน)</div>
                         <div>${group.join(', ')}</div>
-                    </div>`;
+                    </div>
+                `;
             });
 
-            document.getElementById('result').innerHTML = resultHtml;
-            updateStudentList();
+            document.getElementById('result').innerHTML = html;
+            showList();
         }
 
-        function clearSelection() {
-            selectedStudents = [];
-            document.getElementById('result').innerHTML = '';
-            updateDisplay();
+        // แสดงรายชื่อ
+        function showList() {
+            const html = currentList.map((name, i) => `
+                <div class="student-item ${selected.includes(name) ? 'selected' : ''}">
+                    <span>${i + 1}. ${name}</span>
+                    <button class="red" onclick="deleteStudent(${i})">ลบ</button>
+                </div>
+            `).join('');
+            document.getElementById('list').innerHTML = html;
         }
 
-        function updateDisplay() {
-            updateStudentList();
-            if (selectedStudents.length > 0 && !document.getElementById('result').innerHTML) {
-                document.getElementById('result').textContent = 
-                    `นักเรียนที่ถูกเลือก: ${selectedStudents.join(', ')}`;
-            }
-        }
-
-        function updateStudentList() {
-            const list = document.getElementById('student-list');
-            list.innerHTML = '';
+        // ลบนักเรียน
+        function deleteStudent(index) {
+            const grade = document.getElementById('grade').value;
+            const room = document.getElementById('room').value;
             
-            currentStudents.forEach((student, index) => {
-                const li = document.createElement('li');
-                li.className = `student-item ${selectedStudents.includes(student) ? 'selected' : ''}`;
-                
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = `${index + 1}. ${student}`;
-                
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = 'ลบ';
-                deleteBtn.className = 'delete-btn';
-                deleteBtn.onclick = () => deleteStudent(index);
-                
-                li.appendChild(nameSpan);
-                li.appendChild(deleteBtn);
-                list.appendChild(li);
-            });
+            students[grade][room].splice(index, 1);
+            updateList();
         }
+
+        // ล้างข้อมูล
+        function clearAll() {
+            selected = [];
+            document.getElementById('result').innerHTML = '';
+            showList();
+        }
+
+        // Event Listeners
+        document.getElementById('grade').onchange = updateList;
+        document.getElementById('room').onchange = updateList;
+        document.getElementById('name').onkeypress = function(e) {
+            if (e.key === 'Enter') addStudent();
+        };
     </script>
 </body>
 </html>
