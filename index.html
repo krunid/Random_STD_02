@@ -152,6 +152,7 @@
             </select>
 
             <button class="orange" onclick="loadSample()">เรียกข้อมูลตัวอย่าง</button>
+            <button class="blue" onclick="loadFromSheet()">โหลดข้อมูลจาก Sheet</button>
         </div>
 
         <!-- เพิ่มรายชื่อ -->
@@ -186,6 +187,9 @@
         </div>
     </div>
 
+    <!-- Google Sheets API -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.7/axios.min.js"></script>
+    <script async defer src="https://apis.google.com/js/api.js"></script>
     <script>
         // Popup Functions
         function showPopup(message) {
@@ -347,6 +351,41 @@
             selected = [];
             document.getElementById('result').innerHTML = '';
             showList();
+        }
+
+        // โหลดข้อมูลจาก Google Sheet
+        async function loadFromSheet() {
+            const SHEET_ID = 'your-sheet-id'; // ใส่ ID ของ Google Sheet
+            const API_KEY = 'your-api-key'; // ใส่ API Key ของ Google Cloud Project
+            const RANGE = 'std_data!A2:D'; // ช่วงข้อมูลที่ต้องการ A2:D คือ คอลัมน์ A-D เริ่มจากแถวที่ 2
+
+            try {
+                const response = await axios.get(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${API_KEY}`
+                );
+
+                const rows = response.data.values;
+                if (rows.length) {
+                    // ล้างข้อมูลเก่า
+                    students = {};
+
+                    // แปลงข้อมูลจาก Sheet เป็นโครงสร้างที่ต้องการ
+                    rows.forEach(row => {
+                        const [grade, room, number, name] = row;
+                        if (!students[grade]) students[grade] = {};
+                        if (!students[grade][room]) students[grade][room] = [];
+                        students[grade][room].push(name);
+                    });
+
+                    updateList();
+                    showPopup('โหลดข้อมูลจาก Google Sheet สำเร็จ');
+                } else {
+                    showPopup('ไม่พบข้อมูลในช่วงที่ระบุ');
+                }
+            } catch (error) {
+                console.error('Error loading sheet:', error);
+                showPopup('ไม่สามารถโหลดข้อมูลได้ กรุณาตรวจสอบการตั้งค่า');
+            }
         }
 
         // Event Listeners
