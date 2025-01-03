@@ -12,8 +12,6 @@
             padding: 20px;
             background: #f0f2f5;
         }
-
-        /* หน้าหลัก */
         h1 {
             color: #1a73e8;
             text-align: center;
@@ -25,8 +23,6 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-
-        /* ส่วนควบคุม */
         .control-box {
             background: #f8f9fa;
             padding: 15px;
@@ -36,8 +32,6 @@
             align-items: center;
             gap: 10px;
         }
-
-        /* ฟอร์ม */
         select {
             padding: 8px;
             border: 1px solid #ddd;
@@ -56,8 +50,6 @@
             border-radius: 4px;
             width: 80px;
         }
-
-        /* ปุ่มกด */
         button {
             background: #1a73e8;
             color: white;
@@ -72,8 +64,6 @@
         button.orange:hover { background: #fb8c00; }
         button.red { background: #dc3545; }
         button.red:hover { background: #c82333; }
-
-        /* รายชื่อ */
         .student-list {
             list-style: none;
             padding: 0;
@@ -92,13 +82,52 @@
             background: #e8f0fe;
             font-weight: bold;
         }
-
-        /* ผลลัพธ์ */
         #result {
             margin: 15px 0;
             padding: 15px;
             background: #e8f0fe;
             border-radius: 8px;
+        }
+
+        /* Popup Styles */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        .popup-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            min-width: 300px;
+        }
+        .popup-message {
+            margin-bottom: 20px;
+        }
+        .popup-close {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .popup-close:hover {
+            background: #1557b0;
         }
     </style>
 </head>
@@ -149,7 +178,25 @@
         <div id="list"></div>
     </div>
 
+    <!-- Popup Component -->
+    <div id="popup" class="popup">
+        <div class="popup-content">
+            <div id="popup-message" class="popup-message"></div>
+            <button onclick="closePopup()" class="popup-close">ตกลง</button>
+        </div>
+    </div>
+
     <script>
+        // Popup Functions
+        function showPopup(message) {
+            document.getElementById('popup-message').textContent = message;
+            document.getElementById('popup').style.display = 'block';
+        }
+
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
+        }
+
         // ข้อมูลนักเรียน
         let students = {};
         let currentList = [];
@@ -175,7 +222,7 @@
                 }
             };
             updateList();
-            alert('โหลดข้อมูลตัวอย่างสำเร็จ');
+            showPopup('โหลดข้อมูลตัวอย่างสำเร็จ');
         }
 
         // อัพเดทรายการ
@@ -195,7 +242,7 @@
             const name = document.getElementById('name').value.trim();
             
             if (!grade || !room) {
-                alert('กรุณาเลือกชั้นและห้องก่อน');
+                showPopup('กรุณาเลือกชั้นและห้องก่อน');
                 return;
             }
             if (!name) return;
@@ -212,11 +259,11 @@
         function randomSelect() {
             const num = parseInt(document.getElementById('selectNum').value);
             if (currentList.length === 0) {
-                alert('ไม่มีรายชื่อนักเรียน');
+                showPopup('ไม่มีรายชื่อนักเรียน');
                 return;
             }
             if (num < 1 || num > currentList.length) {
-                alert('จำนวนไม่ถูกต้อง');
+                showPopup('จำนวนไม่ถูกต้อง');
                 return;
             }
 
@@ -239,11 +286,11 @@
         function randomGroup() {
             const num = parseInt(document.getElementById('groupNum').value);
             if (currentList.length === 0) {
-                alert('ไม่มีรายชื่อนักเรียน');
+                showPopup('ไม่มีรายชื่อนักเรียน');
                 return;
             }
             if (num < 2 || num > currentList.length) {
-                alert('จำนวนกลุ่มไม่ถูกต้อง');
+                showPopup('จำนวนกลุ่มไม่ถูกต้อง');
                 return;
             }
 
